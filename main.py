@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 import yfinance as yf
+from datetime import timedelta
 # criar as funções de carregamento de dados
 @st.cache_data
 def carregar_dados(empresas):
@@ -14,10 +15,11 @@ def carregar_dados(empresas):
 
 lista_acoes = ["ITUB4.SA", "BITCOIN", "PETR4.SA", "VALE3.SA", "DÓLAR"]
 #preparar visualizacoes
-
+st.sidebar.header("Filtros")
 dados = carregar_dados(lista_acoes)
 
-lista_view = st.multiselect("Escolha as ações para visualizar",dados.columns)
+#filtros de accoes
+lista_view = st.sidebar.multiselect("Escolha as ações para visualizar",dados.columns)
 if lista_view:
     dados = dados[lista_view]
     if len(lista_view) == 1:
@@ -25,6 +27,10 @@ if lista_view:
         dados = dados.rename(columns = {accao_unica: "Close"})  
         
 
+#filtros de datas
+data_inicial = dados.index.min().to_pydatetime()
+data_final = dados.index.max().to_pydatetime()
+intervalo_data = st.sidebar.slider("Selecione periodo", min_value=data_inicial, max_value=data_final, value=(data_inicial, data_final), step=timedelta(days=30))
 print(dados)
 # Criar interface
 st.write("""
@@ -33,5 +39,5 @@ st.write("""
          """)
 
 # Criar Grafico
-
+dados = dados.loc[intervalo_data[0]:intervalo_data[1]]
 st.line_chart(dados)
