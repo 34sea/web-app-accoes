@@ -12,8 +12,14 @@ def carregar_dados(empresas):
     cotacoes_acao = cotacoes_acao["Close"]
     return cotacoes_acao
 
-
-lista_acoes = ["ITUB4.SA", "BITCOIN", "PETR4.SA", "VALE3.SA", "DÓLAR"]
+@st.cache_data
+def carrgar_tickers_accoes():
+    base_tickers = pd.read_csv("IBOV.csv", sep=";")
+    tickers = list(base_tickers["Código"])
+    tickers = [item + ".SA" for item in tickers]
+    return tickers
+#lista_acoes = ["ITUB4.SA", "BITCOIN", "PETR4.SA", "VALE3.SA", "DÓLAR"]
+lista_acoes = carrgar_tickers_accoes()
 #preparar visualizacoes
 st.sidebar.header("Filtros")
 dados = carregar_dados(lista_acoes)
@@ -41,3 +47,21 @@ st.write("""
 # Criar Grafico
 dados = dados.loc[intervalo_data[0]:intervalo_data[1]]
 st.line_chart(dados)
+
+texto_performance_ativos = " "
+
+if len(lista_view) == 0:
+    lista_view = list(dados.column)
+    
+for acao in lista_view:
+    performance_ativo  = dados[acao].iloc[-1] / dados[acao].iloc[0] -1
+    performance_ativo = float(performance_ativo )
+    texto_performance_ativos = texto_performance_ativos + f"  \n{acao}: {performance_ativo:.1%}"
+
+st.write(f"""
+         ### Performance dos ativos
+
+         Essa foi a performance de cada ativo no periodo selecionado
+
+         {texto_performance_ativos}
+         """)
